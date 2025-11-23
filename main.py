@@ -1,25 +1,30 @@
 import os
-import sys
-
-# ĐƠN GIẢN: Xóa dòng này
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from fastapi import FastAPI, Depends, HTTPException, status, Form, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 
-# Import trực tiếp
 from database import SessionLocal, engine, get_db
 import models
 import schemas
 import auth
 
-# Tạo database
-models.Base.metadata.create_all(bind=engine)
+# Health check trước khi import database
+print("🚀 Starting StudyHub API...")
 
-app = FastAPI()
+# Chỉ tạo tables nếu engine tồn tại
+try:
+    if engine:
+        print("📦 Creating database tables...")
+        models.Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created")
+    else:
+        print("❌ No database engine available")
+except Exception as e:
+    print(f"❌ Error creating tables: {e}")
+
+app = FastAPI(title="StudyHub API", version="1.0.0")
 
 # CORS
 app.add_middleware(
@@ -30,15 +35,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health check
+# Health check - không phụ thuộc database
 @app.get("/")
 def read_root():
-    return {"message": "StudyHub API is running!", "status": "healthy"}
+    return {
+        "message": "StudyHub API is running!", 
+        "status": "healthy",
+        "timestamp": datetime.utcnow()
+    }
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
-
+    db_status = "unknown"
+    try:
+        # Kiểm tra kết nối database
+        db = SessionLocal()
+        db.execute("SELECT 1")
+        db_status = "connected"
+        db.close()
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.utcnow(),
+        "database": db_status
+    }
 # Auth endpoints
 @app.post("/register")
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
