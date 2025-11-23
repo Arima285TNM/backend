@@ -31,7 +31,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://frontend-navy-beta-35.vercel.app/"  # URL Vercel của bạn
+        "https://frontend-2vosylkco-arima285tnms-projects.vercel.app/"  # URL Vercel của bạn
     ],
     allow_credentials=True,
     allow_methods=["*"],
