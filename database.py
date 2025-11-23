@@ -4,18 +4,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Railway cung cấp DATABASE_URL tự động
-DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///./study_app.db')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Fix PostgreSQL URL format for Railway
+# Fix PostgreSQL URL format
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Engine configuration for PostgreSQL
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args={"connect_timeout": 10}
+    echo=False  # Tắt log SQL trong production
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
